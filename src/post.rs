@@ -1,14 +1,16 @@
 use std::ops::Deref;
+
 use feed_rs::parser::parse;
 use reqwest::Client;
 use scraper::{Html, Selector};
 use url::Url;
 
-use crate::constants::{BASE_URL, FEED_PATH};
+use super::HttpClients;
 
-pub async fn latest_post(rss_client: &Client) -> reqwest::Result<Url> {
-    let rss_response = rss_client
-        .get(format!("{BASE_URL}{FEED_PATH}")) // https://www.wildfly.org/feed.xml
+pub async fn latest_post(clients: &HttpClients) -> reqwest::Result<Url> {
+    let rss_response = clients
+        .html
+        .get(&clients.website_rss_url) // https://www.wildfly.org/feed.xml
         .send()
         .await?
         .bytes()
@@ -24,12 +26,12 @@ pub async fn latest_post(rss_client: &Client) -> reqwest::Result<Url> {
             .href
             .as_str(),
     )
-        .unwrap())
+    .unwrap())
 }
 
-pub async fn post_description(client: &Client, post_url: &str) -> reqwest::Result<String> {
+pub async fn post_description(html_client: &Client, post_url: &str) -> reqwest::Result<String> {
     let desc_selector = Selector::parse("meta[name=\"description\"]").unwrap();
-    let post = Html::parse_document(&client.get(post_url).send().await?.text().await?);
+    let post = Html::parse_document(&html_client.get(post_url).send().await?.text().await?);
 
     let desc_element = post
         .select(&desc_selector)

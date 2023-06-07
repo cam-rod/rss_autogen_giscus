@@ -1,0 +1,6 @@
+{
+  "schema": "./github.schema.graphql",
+  "documents": [
+    "./*.graphql"
+  ]
+}

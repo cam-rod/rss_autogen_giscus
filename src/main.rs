@@ -14,51 +14,24 @@
 //! `pages-build-deployment` action for GitHub pages. It depends on the RSS feed being up-to-date at the time
 //! of running, so you may need to introduce a delay.
 
-mod constants;
-mod gql;
-mod post;
+use std::error::Error;
 
-use std::time::Duration;
-
-use octocrab::Octocrab;
-
-use gql::create_graphql_request;
-use post::{latest_post, post_description};
+use rss_autogen_giscus::{
+    create_clients, create_discussion, discussion_exists, latest_post, post_description,
+};
 
 #[tokio::main]
-pub async fn main() {
-    let token = std::env::var("GITHUB_TOKEN").expect("GITHUB_TOKEN env var is required");
-    let octocrab = Octocrab::builder()
-        .personal_token(token)
-        .build()
-        .expect("Unable to build GitHub API client");
+pub async fn main() -> Result<(), Box<dyn Error>> {
+    let clients = create_clients();
 
-    let client = reqwest::ClientBuilder::new()
-        .timeout(Duration::from_secs(60))
-        .build()
-        .expect("Unable to build HTTP client");
-
-    let post_url = latest_post(&client).await.unwrap();
-    let post_desc = post_description(&client, post_url.as_str()).await.unwrap();
-    let request = create_graphql_request(&octocrab, &post_url, &post_desc)
+    let post_url = latest_post(&clients).await.unwrap();
+    let post_desc = post_description(&clients.html, post_url.as_str())
         .await
         .unwrap();
 
-    let response: serde_json::Value = octocrab.graphql(&request).await.unwrap();
-    if let Some(discussion_info) = response.get("data") {
-        if discussion_info["id"].is_number()
-            && discussion_info["title"].as_str().unwrap() == post_url.path()
-        {
-            println!(
-                "Successfully created new discussion at {} ({})",
-                discussion_info["url"].as_str().unwrap(),
-                discussion_info["title"].as_str().unwrap()
-            )
-        }
+    if discussion_exists(&clients, &post_url).await {
+        panic!("Discussion was not created for {post_url}.")
+    } else {
+        create_discussion(&clients, post_url, post_desc).await
     }
-
-    panic!(
-        "Dicussion could not be generated. GraphQL response: {}",
-        serde_json::to_string_pretty(&response).unwrap()
-    );
 }
