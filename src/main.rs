@@ -16,22 +16,16 @@
 
 use std::error::Error;
 
-use rss_autogen_giscus::{
-    create_clients, create_discussion, discussion_exists, latest_post, post_description,
-};
+use rss_autogen_giscus::{create_discussion, discussion_exists, HttpClients, Post};
 
 #[tokio::main]
 pub async fn main() -> Result<(), Box<dyn Error>> {
-    let clients = create_clients();
+    let clients = HttpClients::init();
+    let latest_post = Post::get_latest(&clients).await?;
 
-    let post_url = latest_post(&clients).await.unwrap();
-    let post_desc = post_description(&clients.html, post_url.as_str())
-        .await
-        .unwrap();
-
-    if discussion_exists(&clients, &post_url).await {
-        panic!("Discussion was not created for {post_url}.")
+    if discussion_exists(&clients, &latest_post).await {
+        panic!("Discussion was not created for {}.", &latest_post.url)
     } else {
-        create_discussion(&clients, post_url, post_desc).await
+        create_discussion(&clients, latest_post).await
     }
 }
