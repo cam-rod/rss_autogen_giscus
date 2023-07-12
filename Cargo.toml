@@ -1,21 +1,33 @@
-[package]
-name = "rss-autogen-giscus"
+[workspace]
+members = ["gh_gql_schema"]
+
+[workspace.package]
 version = "0.1.0"
 authors = ["Cameron Rodriguez <dev@camrod.me>"]
 edition = "2021"
 license = "Apache-2.0"
+
+[workspace.dependencies]
+cynic = "3"
+serde = "1.0"
+
+[package]
+name = "rss_autogen_giscus"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
 description = "A small program to autogenerate GitHub Discussions from Atom/RSS feeds."
+license.workspace = true
 
 [dependencies]
-cynic = { version = "3", features = ["http-reqwest", "rkyv"] }
-feed-rs = "~1.3"
-graphql_client = { version = "~0.13", features = ["reqwest"] }
-reqwest = { version = "~0.11", features = ["json"] }
-serde = "~1.0"
-serde_json = "~1.0"
-scraper = "~0.16"
-tokio = { version = "~1.28", features = ["macros", "rt-multi-thread"] }
+cynic = { workspace = true, features = ["http-reqwest"] }
+chrono = { version = "0.4", features = ["clock"] }
+feed-rs = "1.3"
+gh_gql_schema = { version = "0.1", path = "gh_gql_schema" }
+graphql_client = { version = "0.13", features = ["reqwest"] }
+reqwest = { version = "0.11", features = ["json"] }
+serde = { workspace = true }
+serde_json = "1.0"
+scraper = "0.17"
+tokio = { version = "1.28", features = ["macros", "rt-multi-thread"] }
 url = "2"
-
-[build-dependencies]
-cynic-codegen = "3"
