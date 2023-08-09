@@ -3,27 +3,6 @@ mod schema {}
 
 // Base Types
 
-/// A custom [`String`] for the `after` field in the API pagination, which sends "null" if no cursor
-/// is provided.
-#[derive(Debug, Clone, cynic::Scalar)]
-#[cynic(graphql_type = "String")]
-pub struct NullableString(pub String);
-
-impl From<Option<String>> for NullableString {
-    fn from(value: Option<String>) -> Self {
-        match value {
-            Some(cursor) => Self(cursor),
-            None => Self::default(),
-        }
-    }
-}
-
-impl Default for NullableString {
-    fn default() -> Self {
-        Self("null".to_string())
-    }
-}
-
 #[derive(cynic::Scalar, Debug, Clone)]
 pub struct DateTime(pub String);
 
@@ -37,6 +16,7 @@ pub struct Discussion {
     pub title: String,
     pub created_at: DateTime,
     pub url: Uri,
+    pub body_text: String,
 }
 
 #[derive(cynic::QueryFragment, Debug)]
@@ -45,13 +25,34 @@ pub struct PageInfo {
     pub has_next_page: bool,
 }
 
+// query RepoIdQuery
+
+#[derive(cynic::QueryVariables, Debug, Clone)]
+pub struct RepoIdQueryVariables<'a> {
+    pub owner: &'a str,
+    pub repo_name: &'a str,
+}
+
+#[derive(cynic::QueryFragment, Debug)]
+#[cynic(graphql_type = "Query", variables = "RepoIdQueryVariables")]
+pub struct RepoIdQuery {
+    #[arguments(owner: $owner, name: $repo_name)]
+    pub repository: Option<RepoIdQueryRepository>,
+}
+
+#[derive(cynic::QueryFragment, Debug)]
+#[cynic(graphql_type = "Repository")]
+pub struct RepoIdQueryRepository {
+    pub id: cynic::Id,
+}
+
 // query CategoryQuery
 
-#[derive(cynic::QueryVariables, Debug)]
+#[derive(cynic::QueryVariables, Debug, Clone)]
 pub struct CategoryQueryVariables<'a> {
     pub owner: &'a str,
     pub repo_name: &'a str,
-    pub after_cursor: NullableString,
+    pub after_cursor: Option<String>,
 }
 
 #[derive(cynic::QueryFragment, Debug)]
@@ -78,7 +79,7 @@ pub struct DiscussionCategoryConnection {
 #[derive(cynic::QueryFragment, Debug)]
 pub struct DiscussionCategoryEdge {
     pub node: Option<DiscussionCategory>,
-    pub cursor: NullableString,
+    pub cursor: String,
 }
 
 #[derive(cynic::QueryFragment, Debug)]
@@ -89,11 +90,12 @@ pub struct DiscussionCategory {
 
 // query DiscussionExists
 
-#[derive(cynic::QueryVariables, Debug)]
+#[derive(cynic::QueryVariables, Debug, Clone)]
 pub struct DiscussionExistsVariables<'a> {
     pub owner: &'a str,
     pub repo_name: &'a str,
-    pub after_cursor: NullableString,
+    pub cat_id: cynic::Id,
+    pub after_cursor: Option<String>,
 }
 
 #[derive(cynic::QueryFragment, Debug)]
@@ -106,7 +108,7 @@ pub struct DiscussionExists {
 #[derive(cynic::QueryFragment, Debug)]
 #[cynic(graphql_type = "Repository", variables = "DiscussionExistsVariables")]
 pub struct DiscussionExistsRepository {
-    #[arguments(orderBy: { direction: "DESC", field: "CREATED_AT" }, first: 50, after: $after_cursor)]
+    #[arguments(orderBy: { direction: "DESC", field: "CREATED_AT" }, categoryId: $cat_id, first: 50, after: $after_cursor)]
     pub discussions: DiscussionConnection,
 }
 
@@ -139,7 +141,7 @@ pub struct CreateCommentsDiscussionVariables {
     variables = "CreateCommentsDiscussionVariables"
 )]
 pub struct CreateCommentsDiscussion {
-    #[arguments(input: { body: $desc, categoryId: $cat_id, repositoryId: $repo_id, title: $title })]
+    #[arguments(input: { clientMutationId: "rss_autogen_giscus", body: $desc, categoryId: $cat_id, repositoryId: $repo_id, title: $title })]
     pub create_discussion: Option<CreateDiscussionPayload>,
 }
 
@@ -156,8 +158,7 @@ impl From<Uri> for String {
 
 #[cfg(test)]
 mod tests {
-    use crate::NullableString;
-    use cynic::{MutationBuilder, QueryBuilder};
+    use cynic::Id;
 
     #[allow(unused_imports)]
     use super::schema;
@@ -166,13 +167,26 @@ mod tests {
     const REPO_NAME: &str = "team-role-org-testing.github.io";
 
     #[test]
+    fn repo_id_query_output() {
+        use super::{RepoIdQuery, RepoIdQueryVariables};
+        use cynic::QueryBuilder;
+
+        let repo_id_query_op = RepoIdQuery::build(RepoIdQueryVariables {
+            owner: REPO_OWNER,
+            repo_name: REPO_NAME,
+        });
+        print!("{}", repo_id_query_op.query);
+    }
+
+    #[test]
     fn category_query_output() {
         use super::{CategoryQuery, CategoryQueryVariables};
+        use cynic::QueryBuilder;
 
         let category_query_op = CategoryQuery::build(CategoryQueryVariables {
             owner: REPO_OWNER,
             repo_name: REPO_NAME,
-            after_cursor: NullableString::default(),
+            after_cursor: None,
         });
         print!("{}", category_query_op.query);
     }
@@ -180,11 +194,13 @@ mod tests {
     #[test]
     fn discussion_exists_output() {
         use super::{DiscussionExists, DiscussionExistsVariables};
+        use cynic::QueryBuilder;
 
         let discussion_exists_op = DiscussionExists::build(DiscussionExistsVariables {
             owner: REPO_OWNER,
             repo_name: REPO_NAME,
-            after_cursor: NullableString::default(),
+            cat_id: Id::new("155"),
+            after_cursor: None,
         });
         print!("{}", discussion_exists_op.query);
     }
@@ -192,6 +208,7 @@ mod tests {
     #[test]
     fn create_comments_discussion_output() {
         use super::{CreateCommentsDiscussion, CreateCommentsDiscussionVariables};
+        use cynic::MutationBuilder;
 
         let create_comments_discussion_op =
             CreateCommentsDiscussion::build(CreateCommentsDiscussionVariables {

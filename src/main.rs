@@ -8,7 +8,7 @@
 //! to create a post, formatted as follows:
 //!
 //! - **Title**: URL path of the post (not including base URL)
-//! - **Description**: First paragraph of the post, followed by a full link
+//! - **Description**: Pulled from the `<meta name="description">` tag, followed by a full link
 //!
 //! This crate works best when run as a GitHub Action, triggered by the completion of the
 //! `pages-build-deployment` action for GitHub pages. Since the RSS feed must be up-to-date at runtime,
