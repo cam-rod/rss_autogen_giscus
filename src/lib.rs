@@ -1,11 +1,27 @@
+//! Autogenerate GitHub Discussions to be used by Giscus.
+//!
+//! This came from a need to support Giscus without requiring users to authenticate
+//! with the app. Since the discussion isn't created until someone comments, we needed a way to
+//! automatically create it once a blog post was uploaded.
+//!
+//! This crate checks for the latest post in the blog's RSS feed, and then extracts the contents
+//! needed to create a discussion post, formatted as follows:
+//!
+//! - **Title**: URL path of the post (not including base URL)
+//! - **Description**: Pulled from the `<meta name="description">` tag, followed by a full link
+//!
+//! The program works best when run after the RSS feed has been updated with the most recent post.
+//! This may require you to introduce a delay.
+
 mod gql;
 mod post;
 
+use std::env;
 use std::str::FromStr;
 use std::sync::Arc;
-use std::{env, error::Error, time::Duration};
+use std::time::Duration;
 
-use cynic::http::ReqwestExt;
+use cynic::http::{CynicReqwestError, ReqwestExt};
 use reqwest::header::USER_AGENT;
 use reqwest::{
     header::{HeaderMap, HeaderValue, ACCEPT, AUTHORIZATION},
@@ -19,7 +35,7 @@ use gql::{create_graphql_request, discussion_exists, get_category_id};
 
 /// Monostruct containing the HTML and GraphQL clients used to create the discussion, along with the
 /// necessary URLs.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct HttpClients {
     /// HTML client for accessing the RSS feed, blog post, and GitHub REST API.
     pub html: Client,
@@ -27,17 +43,19 @@ pub struct HttpClients {
     /// GraphQL client for accessing the GitHub GraphQL API. This client must be created with the
     /// following headers, using [`ClientBuilder::default_headers`](reqwest::ClientBuilder::default_headers):
     ///
-    /// - `Authorization: <GitHub token>`
     /// - `Accept: application/vnd.github+json`
+    /// - `Authorization: <GitHub token>`
+    /// - `User-Agent: <appropriate user agent name>`
+    /// - `X-Github-Next-Global-ID: 1`
     pub gql: Client,
 
     /// URL for the blog's RSS feed.
     pub website_rss_url: String,
 
-    /// URL for GitHub REST API
+    /// URL for GitHub REST API, typically <https://api.github.com>
     pub github_rest_url: String,
 
-    /// URL for GitHub GraphQL API
+    /// URL for GitHub GraphQL API, typically <https://api.github.com/graphql>
     pub github_gql_url: String,
 
     /// Owner of the repository hosting the comments.
@@ -56,8 +74,9 @@ pub struct HttpClients {
 
 impl HttpClients {
     /// Create the reqwest clients, and pull the other values from environment variables. These are
-    /// assumed to be default values available in GitHub Actions, except for `DISCUSSION_CATEGORY`
-    /// and `LOOKBACK_DAYS`:
+    /// assumed to be formatted like the
+    /// [default values available in GitHub Actions](https://docs.github.com/en/actions/learn-github-actions/variables#default-environment-variables),
+    /// except for `DISCUSSION_CATEGORY` and `LOOKBACK_DAYS`:
     ///
     /// - `GITHUB_TOKEN`, used in the authorization header for the [GraphQL client](HttpClients::gql)
     /// - [`WEBSITE_RSS_URL`](HttpClients::website_rss_url), required
@@ -67,6 +86,20 @@ impl HttpClients {
     /// - `GITHUB_REPOSITORY` in format `<owner>/<repo>`, required (mapped to [`repo_name`](HttpClients::repo_name))
     /// - [`DISCUSSION_CATEGORY`](HttpClients::discussion_category) as the name of the category to post under, required
     /// - [`LOOKBACK_DAYS`](HttpClients::lookback_days), optional (defaults to 7)
+    ///
+    /// ```rust
+    /// use std::env;
+    /// use rss_autogen_giscus::HttpClients;
+    ///
+    /// env::set_var("WEBSITE_RSS_URL", "https://rss.cbc.ca/lineup/topstories.xml");
+    /// env::set_var("GITHUB_TOKEN", "secret_github_pat");
+    /// env::set_var("GITHUB_REPOSITORY_OWNER", "microsoft");
+    /// env::set_var("GITHUB_REPOSITORY", "microsoft/vscode");
+    /// env::set_var("DISCUSSION_CATEGORY", "CBC News");
+    /// env::set_var("LOOKBACK_DAYS", "0");
+    ///
+    /// let clients = HttpClients::init();
+    /// ```
     pub fn init() -> Arc<Self> {
         let (html_client, gql_client) = Self::clients(false);
 
@@ -95,7 +128,10 @@ impl HttpClients {
         })
     }
 
-    /// A small method to create the HTML and GraphQL clients, mainly for testing purposes.
+    /// A small function to create the HTML and GraphQL clients, mainly for testing purposes.
+    ///
+    /// Passing `true` will replace `GITHUB_TOKEN` with a fake value, so that the environment
+    /// variable does not need to be set.
     fn clients(use_placeholder_github_token: bool) -> (Client, Client) {
         let token = match use_placeholder_github_token {
             true => String::from("00112233FAKE_TOKEN44556677"),
@@ -154,11 +190,24 @@ impl HttpClients {
     }
 }
 
-/// Create the GitHub Discussion for Giscus.
+/// Create the GitHub Discussion post for Giscus.
+///
+/// ```rust
+/// use cynic::http::CynicReqwestError;
+/// use rss_autogen_giscus::{create_discussion, HttpClients, Post};
+///
+/// #[tokio::main]
+/// pub async fn main() -> Result<(), CynicReqwestError> {
+///     let clients = HttpClients::init();
+///     let latest_post = Post::get_latest(&clients).await?;
+///
+///     create_discussion(clients, latest_post).await
+/// }
+/// ```
 pub async fn create_discussion(
     clients: Arc<HttpClients>,
     post: Arc<Post>,
-) -> Result<(), Box<dyn Error>> {
+) -> Result<(), CynicReqwestError> {
     let cat_id = Arc::new(get_category_id(Arc::clone(&clients)).await?);
 
     let (is_existing_discussion, create_disc_op) = join!(

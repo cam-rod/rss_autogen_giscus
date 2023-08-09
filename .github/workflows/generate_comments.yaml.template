@@ -1,0 +1,20 @@
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - _posts/
+
+jobs:
+  generate_giscus_discussion:
+    name: Generate a GitHub Discussion post for Giscus comments on the latest post
+    runs-on: ubuntu-latest
+    steps:
+      - name: Sleep while website is built
+        run: sleep 300
+      - uses: .github/actions/
+        id: rss_autogen_giscus
+        with:
+          website_rss_url: https://team-role-org-testing.github.io/feed.xml
+          discussion_category: Blogs
+          # lookback_days: 7

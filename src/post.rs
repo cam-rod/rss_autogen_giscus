@@ -7,7 +7,7 @@ use url::Url;
 use crate::HttpClients;
 
 /// A representation of a typical blog post, used in creating the GitHub Discussion
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Post {
     /// Description of the blog post, pulled from the `<meta name="description">` tag.
     pub description: Option<String>,
@@ -18,6 +18,28 @@ pub struct Post {
 
 impl Post {
     /// Extracts the description from the latest blog post.
+    ///
+    /// ```rust
+    /// use std::env;
+    /// use cynic::http::CynicReqwestError;
+    ///
+    /// use rss_autogen_giscus::{create_discussion, HttpClients, Post};
+    ///
+    /// const BASE_URL: &str = "cbc.ca";
+    /// #[tokio::main]
+    /// pub async fn main() -> Result<(), CynicReqwestError> {
+    ///     env::set_var("WEBSITE_RSS_URL", "https://rss.cbc.ca/lineup/topstories.xml");
+    ///     env::set_var("GITHUB_TOKEN", "secret_github_pat");
+    ///     env::set_var("GITHUB_REPOSITORY_OWNER", "microsoft");
+    ///     env::set_var("GITHUB_REPOSITORY", "microsoft/vscode");
+    ///     env::set_var("DISCUSSION_CATEGORY", "CBC News");
+    ///     env::set_var("LOOKBACK_DAYS", "0");
+    ///
+    ///     let clients = HttpClients::init();
+    ///     let latest_post = Post::get_latest(&clients).await?;
+    ///     assert!(latest_post.url.as_str().contains(BASE_URL));
+    ///     Ok(())
+    /// }
     pub async fn get_latest(clients: &HttpClients) -> reqwest::Result<Arc<Self>> {
         let post_url = latest_post_from_rss(clients).await?;
 

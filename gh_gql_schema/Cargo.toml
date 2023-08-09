@@ -3,8 +3,13 @@ name = "gh_gql_schema"
 version.workspace = true
 authors.workspace = true
 edition.workspace = true
-description = "Crate with GitHub GraphQL API"
+description = "Cynic bindings to the GitHub GraphQL API for rss_autogen_giscus"
+readme = "README.md"
+homepage.workspace = true
+repository.workspace = true
 license.workspace = true
+keywords = ["github", "graphql", "cynic"]
+categories = ["api-bindings"]
 
 [dependencies]
 cynic = { workspace = true, features = ["rkyv"] }

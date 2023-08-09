@@ -1,0 +1,21 @@
+name: "rss_autogen_giscus"
+description: "Autogenerate GitHub Discussions from RSS feeds for Giscus"
+author: "Cameron Rodriguez"
+inputs:
+  website_rss_url:
+    description: "Link to the RSS feed that gets updated with the latest posts"
+    required: true
+  discussion_category:
+    description: "Name of the category on GitHub discussions that the post should be made under"
+    required: true
+  lookback_days:
+    description: "The number of days to look backwards, checking if the post already exists. Limit is disabled if set to 0."
+    required: false
+    default: "7"
+runs:
+  using: docker
+  image: ghcr.io/cam-rod/rss_autogen_giscus:0.1.0
+  env:
+    WEBSITE_RSS_URL: ${{ inputs.website_rss_url }}
+    DISCUSSION_CATEGORY: ${{ inputs.discussion_category }}
+    LOOKBACK_DAYS: ${{ inputs.lookback_days }}

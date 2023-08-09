@@ -5,6 +5,8 @@ members = ["gh_gql_schema"]
 version = "0.1.0"
 authors = ["Cameron Rodriguez <dev@camrod.me>"]
 edition = "2021"
+homepage = "https://github.com/cam-rod/rss_autogen_giscus"
+repository = "https://github.com/cam-rod/rss_autogen_giscus"
 license = "Apache-2.0"
 
 [workspace.dependencies]
@@ -17,7 +19,13 @@ version.workspace = true
 authors.workspace = true
 edition.workspace = true
 description = "Autogenerate GitHub Discussions from RSS feeds for Giscus"
+readme = "README.md"
+homepage.workspace = true
+repository.workspace = true
 license.workspace = true
+keywords = ["giscus", "github-discussions", "rss", "blog"]
+categories = ["web-programming"]
+exclude = [".github/", "Containerfile", "*.iml"]
 
 [dependencies]
 cynic = { workspace = true, features = ["http-reqwest"] }
