@@ -14,7 +14,7 @@ inputs:
     default: "7"
 runs:
   using: docker
-  image: ghcr.io/cam-rod/rss_autogen_giscus:0.1.0
+  image: ghcr.io/cam-rod/rss_autogen_giscus:latest
   env:
     WEBSITE_RSS_URL: ${{ inputs.website_rss_url }}
     DISCUSSION_CATEGORY: ${{ inputs.discussion_category }}

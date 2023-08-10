@@ -2,7 +2,7 @@
 members = ["gh_gql_schema"]
 
 [workspace.package]
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Cameron Rodriguez <dev@camrod.me>"]
 edition = "2021"
 homepage = "https://github.com/cam-rod/rss_autogen_giscus"
@@ -19,6 +19,7 @@ version.workspace = true
 authors.workspace = true
 edition.workspace = true
 description = "Autogenerate GitHub Discussions from RSS feeds for Giscus"
+documentation = "https://docs.rs/rss_autogen_giscus"
 readme = "README.md"
 homepage.workspace = true
 repository.workspace = true

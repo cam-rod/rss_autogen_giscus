@@ -595,7 +595,7 @@ dependencies = [
 
 [[package]]
 name = "gh_gql_schema"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "cynic",
  "cynic-codegen",
@@ -1436,7 +1436,7 @@ dependencies = [
 
 [[package]]
 name = "rss_autogen_giscus"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "chrono",
  "cynic",

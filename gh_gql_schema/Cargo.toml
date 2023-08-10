@@ -4,6 +4,7 @@ version.workspace = true
 authors.workspace = true
 edition.workspace = true
 description = "Cynic bindings to the GitHub GraphQL API for rss_autogen_giscus"
+documentation = "https://docs.rs/gh_gql_schema"
 readme = "README.md"
 homepage.workspace = true
 repository.workspace = true
