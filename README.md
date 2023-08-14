@@ -3,8 +3,7 @@
 [Giscus](https://github.com/giscus/giscus) offers a great solution to bring commenting support to your website, but it comes with the caveat that authorizing the app grants permissions to all repos. You can still comment on GitHub itself, but the discussion post itself is only created when an authenticated user leaves one first. This program solves that, running as a container that can check for new blog posts from an RSS feed, and generating a compatible discussion for Giscus.
 
 ## Usage
-
-_Note: currently, there are some issues with running the container image. For now, it's recommended to locally build the program, and then load it into automation from there. The container image linked in the GitHub Action is **not** available yet._
+_Note: currently, there are some issues with running the GitHub Action. For now, you can either run the container image with the environment variables (`podman run ghcr.io/cam-rod/rss_autogen_giscus:latest`), install the crate (`cargo install rss_autogen_giscus`), or build it yourself._
 
 1. Enable [Giscus](https://github.com/giscus/giscus) in your repo. When choosing the page to discussions mapping, select **"Discussion title contains page pathname"**.
 2. Clone the [GitHub Action](.github/actions/rss_autogen_giscus/action.yaml) from this repo into your own. Replace the `website_rss_url` and `discussion_category` with your own inputs, and optionally provide `lookback_days`.

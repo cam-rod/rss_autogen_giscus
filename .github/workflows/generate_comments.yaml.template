@@ -1,4 +1,5 @@
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
@@ -10,10 +11,14 @@ jobs:
     name: Generate a GitHub Discussion post for Giscus comments on the latest post
     runs-on: ubuntu-latest
     steps:
-      - name: Sleep while website is built
-        run: sleep 300
-      - uses: .github/actions/
-        id: rss_autogen_giscus
+      - name: Wait for site build to complete
+        uses: lewagon/wait-on-check-action@v1.3.1
+        with:
+          ref: main
+          check-name: "deploy"
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/checkout@v3
+      - uses: ./.github/actions/rss_autogen_giscus
         with:
           website_rss_url: https://team-role-org-testing.github.io/feed.xml
           discussion_category: Blogs
