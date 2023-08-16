@@ -18,7 +18,7 @@ jobs:
           DEBIAN_FRONTEND: noninteractive
         run: |
           curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-          cargo install rss_autogen_giscus
+          cargo install rss_autogen_giscus --version "~0.2"
       - name: Wait for site build to complete
         uses: lewagon/wait-on-check-action@v1.3.1
         with:
