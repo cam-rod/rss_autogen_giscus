@@ -1,4 +1,4 @@
-//! This library provides [`cynic-codegen`] structs, used by [`rss_autogen_giscus`] to interact with
+//! This library provides [`cynic_codegen`](https://github.com/obmarg/cynic) structs, used by [`rss_autogen_giscus`](https://github.com/cam-rod/rss_autogen_giscus) to interact with
 //! GitHub's GraphQL API.
 //!
 //! This library is not intended to be used by other crates, so it is mostly undocumented.
@@ -163,7 +163,7 @@ impl From<Uri> for String {
 
 #[cfg(test)]
 mod tests {
-    //! These tests print the queries used by [`rss_autogen_giscus`] for inspection.
+    //! These tests print the queries used by [`rss_autogen_giscus`](https://github.com/cam-rod/rss_autogen_giscus) for inspection.
 
     use cynic::Id;
 

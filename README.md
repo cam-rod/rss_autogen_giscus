@@ -21,7 +21,7 @@ podman run --rm -it -e DISCUSSION_CATEGORY=Blogs [...] rss_autogen_giscus:latest
 ### GitHub Actions
 
 1. Enable [Giscus](https://github.com/giscus/giscus) in your repo. When choosing the page to discussions mapping, select **"Discussion title contains page pathname"**.
-2. Copy the [workflow job](.github/workflows/generate_comments.yaml.template) from this repo. Edit the input fields, and modify the trigger as needed. Take note of `LOOKBACK_DAYS`, as it may recreate an existing post if the program is unintentionally triggered.
+2. Copy the [workflow job](.github/workflows/generate_comments.yaml.template) from this repo. Edit the environment variables, and modify the trigger as needed. Take note of `LOOKBACK_DAYS`, as it may recreate an existing post if the program is unintentionally triggered.
 
 ## Contributing
 

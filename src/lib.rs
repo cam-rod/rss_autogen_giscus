@@ -12,11 +12,17 @@
 //!
 //! The program works best when run after the RSS feed has been updated with the most recent post.
 //! This may require you to introduce a delay.
+//!
+//! # Exit codes
+//!
+//! Generally the program will panic to exit. There is one exception to this rule - if a discussion
+//! post already exists, it will use [`COMMENTS_EXIST`].
 
 mod gql;
 mod post;
 
 use std::env;
+use std::process;
 use std::str::FromStr;
 use std::sync::Arc;
 use std::time::Duration;
@@ -32,6 +38,10 @@ use tokio::join;
 pub use post::Post;
 
 use gql::{create_graphql_request, discussion_exists, get_category_id};
+
+/// Exit code for when comments already exist (as
+/// in [HTTP 303 See Other](https://www.rfc-editor.org/rfc/rfc9110.html#section-15.4.4))
+pub const COMMENTS_EXIST: i32 = 3;
 
 /// Monostruct containing the HTML and GraphQL clients used to create the discussion, along with the
 /// necessary URLs.
@@ -192,6 +202,11 @@ impl HttpClients {
 
 /// Create the GitHub Discussion post for Giscus.
 ///
+/// # Example
+///
+/// This is effectively a duplicate of the program binary. It won't run without setting
+/// the [required environment variables](HttpClients::init).
+///
 /// ```rust
 /// use cynic::http::CynicReqwestError;
 /// use rss_autogen_giscus::{create_discussion, HttpClients, Post};
@@ -240,7 +255,8 @@ pub async fn create_discussion(
                 "Successfully created new discussion at {} ({})",
                 String::from(discussion_info.url),
                 discussion_info.title
-            )
+            );
+            process::exit(COMMENTS_EXIST);
         }
     } else {
         panic!(

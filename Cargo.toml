@@ -2,7 +2,7 @@
 members = ["gh_gql_schema"]
 
 [workspace.package]
-version = "0.1.1"
+version = "0.2.0"
 authors = ["Cameron Rodriguez <dev@camrod.me>"]
 edition = "2021"
 homepage = "https://github.com/cam-rod/rss_autogen_giscus"
@@ -32,7 +32,7 @@ exclude = [".github/", "Containerfile", "*.iml"]
 cynic = { workspace = true, features = ["http-reqwest"] }
 chrono = { version = "0.4", features = ["clock"] }
 feed-rs = "1.3"
-gh_gql_schema = { version = "0.1", path = "gh_gql_schema" }
+gh_gql_schema = { version = "0.2", path = "gh_gql_schema" }
 graphql_client = { version = "0.13", features = ["reqwest"] }
 reqwest = { version = "0.11", features = ["json"] }
 serde = { workspace = true }

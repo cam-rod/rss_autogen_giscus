@@ -35,4 +35,10 @@ jobs:
           # PAT for authentication
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          set +e
+          
           rss_autogen_giscus
+          case $? in
+            "0" | "3") exit 0;;
+            *) exit $?;;
+          esac
